@@ -1,0 +1,52 @@
+/* 
+   Storing Data Protocol
+*/
+
+// User type declaration
+
+usertype message;
+usertype label;
+
+// Protocol description, I bob (assuption DO), R alice (assumption CSP)
+
+protocol ISAC1 (DO,CSP)
+{
+	role DO //DO equals PID(DO)
+	{
+		fresh m1: message;
+		fresh m2: message;
+		var lbi: label;
+		var nb: Nonce;
+		fresh na: Nonce;
+
+		send_1 (DO,CSP, {m1, m2, na, DO}pk(CSP));
+		recv_2 (CSP,DO, {lbi, na, nb, CSP}pk(DO));
+		claim(DO, Running, CSP, m1, m2, lbi, nb);
+		send_3 (DO,CSP, {nb}pk(CSP));
+
+		claim(DO, Secret, m1);
+		claim(DO, Secret, m2);
+		claim(DO, Secret, lbi);
+		claim(DO, Nisynch);
+	}
+
+	role CSP
+	{
+		var m1: message;
+		var m2: message;
+		fresh lbi: label;
+		fresh nb: Nonce;
+		var na: Nonce;
+
+		recv_1 (DO,CSP, {m1, m2, na, DO}pk(CSP));
+		claim(CSP, Running, DO, m1, m2, lbi, na);
+		send_2(CSP,DO, {lbi, na, nb, CSP}pk(DO));
+		recv_3 (DO,CSP, {nb}pk(CSP));
+
+		claim(CSP, Secret, m1);
+		claim(CSP, Secret, m2);
+		claim(CSP, Secret, lbi);
+		claim(CSP, Nisynch);
+	}
+}
+

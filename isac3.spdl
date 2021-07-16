@@ -1,0 +1,98 @@
+/*  Challenge-Response Protocol  */
+
+// User type declaration
+usertype message;
+usertype label;
+usertype dataowner;
+usertype random;
+usertype alpha;
+usertype beta;
+
+protocol ISAC3 (DU,TPA,CSP)
+{
+	role DU
+	{
+		fresh DO: dataowner;
+		fresh m1: message;
+		fresh m2: message;
+		fresh lbi: label;
+		fresh nf: Nonce;
+		var ng: Nonce;
+		//var res: message; //
+		//var na: Nonce; //
+		//fresh nb: Nonce; //
+
+		send_1 (DU,TPA, {m1, m2, lbi, DO, nf, DU}pk(TPA));
+		recv_2 (TPA,DU, {nf, ng, TPA}pk(DU));
+		claim(DU, Running, TPA, m1, m2, lbi, DO, nf, ng);
+		send_3 (DU, TPA, {ng}pk(TPA));
+
+		//recv_7 (TPA, DU, {res, na}pk(DU)); //
+		//send_8 (DU, TPA, {na, nb}pk(TPA)); //
+		//recv_9 (TPA, DU, {nb}pk(DU)); //
+
+		claim(DU, Secret, m1);
+		claim(DU, Secret, m2);
+	}
+	role TPA
+	{
+		var DO: dataowner;
+		var m1: message;
+		var m2: message;
+		var lbi: label;
+		var nf: Nonce;
+		fresh ng: Nonce;
+		fresh j: random;
+		fresh Vj: random;
+		var lbi: label;
+		fresh nh: Nonce;
+		var ni: Nonce;
+		var a: alpha;
+		var b: beta;
+		//fresh res: message; //
+		//fresh na: Nonce; //
+		//var nb: Nonce; //
+
+		recv_1 (DU,TPA, {m1, m2, lbi, DO, nf, DU}pk(TPA));
+		claim(TPA, Running, DU, m1, m2, lbi, DO, nf, ng);
+		send_2 (TPA,DU, {nf, ng, TPA}pk(DU));
+		recv_3 (DU, TPA, {ng}pk(TPA));
+
+		send_4 (TPA,CSP, {j, Vj, lbi, nh, DO, TPA}pk(CSP));
+		recv_5 (CSP,TPA, {a, b, lbi, DO, nh, ni, CSP}pk(TPA));
+		claim(TPA, Running, CSP, a, b, lbi, ni, DO);
+		send_6 (TPA,CSP, {ni}pk(CSP));
+
+		//send_7 (TPA, DU, {res, na}pk(DU)); //
+		//recv_8 (DU, TPA, {na, nb}pk(TPA)); //
+		//send_9 (TPA, DU, {nb}pk(DU)); //
+
+		claim(TPA, Secret, m1);
+		claim(TPA, Secret, m2);
+		claim(TPA, Secret, lbi);
+		claim(TPA, Secret, DO);
+		claim(TPA, Secret, j);
+		claim(TPA, Secret, Vj);
+		//claim(TPA, Secret, res);
+	}
+	role CSP
+	{
+		var j: random;
+		var Vj: random;
+		var nh: Nonce;
+		var lbi: label;
+		var DO: dataowner;
+		fresh ni: Nonce;
+		fresh a: alpha;
+		fresh b: beta;
+
+		recv_4 (TPA,CSP, {j, Vj, lbi, nh, DO, TPA}pk(CSP));
+		claim(CSP, Running, TPA, j, Vj, lbi, nh, DO);
+		send_5 (CSP,TPA, {a, b, lbi, DO, nh, ni, CSP}pk(TPA));
+		recv_6 (TPA,CSP, {ni}pk(CSP));
+
+		claim(CSP, Secret, a);
+		claim(CSP, Secret, b);
+	}
+}
+

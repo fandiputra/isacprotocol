@@ -1,0 +1,83 @@
+/* 
+   Getting and Log Data Protocol
+*/
+
+// User type declaration
+
+usertype message;
+usertype label;
+usertype log;
+usertype label;
+usertype datauser;
+
+protocol ISAC2 (DU,CSP,DO)
+{
+	role DU //DU equals PID(DU)
+	{
+		fresh nc: Nonce;
+		var m1: message;
+		var m2: message;
+		fresh lbi: label;
+		var nd: Nonce;
+
+		send_1 (DU,CSP, {lbi, nc, DU}pk(CSP));
+		recv_2 (CSP,DU, {m1, m2, lbi, nd, CSP}pk(DU));
+		claim (DU, Running, CSP, lbi, nc, m1, m2, nd);
+		send_3 (DU,CSP, {nd}pk(CSP));
+
+		claim(DU, Secret, m1);
+		claim(DU, Secret, m2);
+		claim(DU, Secret, lbi);
+		claim(DU, Alive, CSP);
+		claim(DU, Niagree);
+		claim(DU, Nisynch);
+	}
+
+	role CSP
+	{
+		var nc: Nonce;
+		fresh m1: message;
+		fresh m2: message;
+		var lbi: label;
+		fresh nd: Nonce;
+		fresh user: datauser; //
+		var ne: Nonce; //
+		fresh log: log; //
+
+		recv_1 (DU,CSP, {lbi, nc, DU}pk(CSP));
+		claim(CSP, Running, DU, lbi, nc, m1, m2, gl);
+		send_2 (CSP,DU, {m1, m2, lbi, nd, CSP}pk(DU));
+		recv_3 (DU,CSP, {nd}pk(CSP));
+		send_4 (CSP,DO, {log, user, CSP}pk(DO)); //
+		recv_5 (DO,CSP, {ne, log, DO}pk(CSP)); //
+		claim(CSP, Running, DO, ne, log); //
+		send_6 (CSP,DO, {ne}pk(DO)); //
+
+		claim(CSP, Secret, m1);
+		claim(CSP, Secret, m2);
+		claim(CSP, Secret, lbi);
+		claim(CSP, Secret, log);
+		claim(CSP, Secret, user);
+		claim(CSP, Alive, DU);
+		claim(CSP, Alive, DO);
+		claim(CSP, Niagree);
+		claim(CSP, Nisynch);
+	}
+
+	role DO //
+	{
+		var user: datauser;
+		fresh ne: Nonce;
+		var log: log;
+
+		recv_4 (CSP,DO, {log, user, CSP}pk(DO));
+		claim(DO, Running, CSP, log, user);
+		send_5 (DO,CSP, {ne, log, DO}pk(CSP));
+		recv_6 (CSP,DO, {ne}pk(DO));
+
+		claim(DO, Secret, log);
+		claim(DO, Secret, user);
+		claim(DO, Alive, CSP);
+	}
+}
+

@@ -1,0 +1,50 @@
+/* 
+   Result Protocol
+*/
+
+// User type declaration
+
+usertype result;
+usertype label;
+usertype dataowner;
+
+// Protocol description, I bob (assuption TPA), R alice (assumption DU)
+
+protocol ISAC4 (DU,TPA)
+{
+	role TPA
+	{
+		fresh DO: dataowner;
+		fresh res: result;
+		fresh lbi: label;
+		var nr: Nonce;
+
+		send_1 (TPA,DU, {res, lbi, DO, TPA}pk(DU));
+		recv_2 (DU,TPA, {lbi, nr, DU}pk(TPA));
+		claim(TPA, Running, DU, res, lbi, DO, nr);
+		send_3 (TPA,DU, {nr}pk(DU));
+
+		claim(TPA, Secret, res);
+		claim(TPA, Secret, lbi);
+		claim(TPA, Secret, DO);
+	}
+
+	role DU
+	{
+		var DO: dataowner;
+		var res: result;
+		var lbi: label;
+		fresh nr: Nonce;
+
+		recv_1 (TPA,DU, {res, lbi, DO, TPA}pk(DU));
+		claim(DU, Running, TPA, res, lbi, DO, nr);
+		send_2 (DU,TPA, {lbi, nr, DU}pk(TPA));
+		recv_3 (TPA,DU, {nr}pk(DU));
+
+		claim(DU, Secret, res);
+		claim(DU, Secret, lbi);
+		claim(DU, Secret, DO);
+		claim(DU, Secret, nr);
+	}
+}
+
